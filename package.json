@@ -6,7 +6,8 @@
   "description": "Base funcional do domínio Vértice One",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check packages/domain/demand.mjs && node --check graphs/demand-graph.mjs && node --check tests/demand.test.mjs && node --check tests/demand-graph.test.mjs && node --check graphs/estimate-job.mjs && node --check tests/estimate-job.test.mjs"
+    "check": "node --check packages/domain/demand.mjs && node --check graphs/demand-graph.mjs && node --check tests/demand.test.mjs && node --check tests/demand-graph.test.mjs && node --check graphs/estimate-job.mjs && node --check tests/estimate-job.test.mjs && node --check scripts/demo-estimate.mjs",
+    "graph:demo": "node scripts/demo-estimate.mjs"
   },
   "engines": {
     "node": ">=20"
