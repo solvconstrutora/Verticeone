@@ -84,7 +84,7 @@ test("E2E simulado: demanda -> orçamento -> aceite -> OS -> encerramento",()=>{
   assert.equal(demand.status,"COMPLETED");
   assert.equal(estimate.status,"approved");
   assert.equal(audit.length,Object.keys(DEMAND_GRAPH).length-1);
-  assert.equal(audit.filter(x=>x.gate!==null).length,11);
+  assert.equal(audit.filter(x=>x.gate!==null).length,Object.values(DEMAND_GRAPH).filter(x=>x.gate).length);
 });
 test("E2E simulado: gate técnico impede sequência",()=>{
   const {graph,estimate,blocked}=runScenario({rejectTechnical:true});
