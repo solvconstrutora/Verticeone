@@ -1,0 +1,22 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {newEstimate,changeEstimate,validateEstimateCallback} from "../graphs/estimate-job.mjs";
+const fresh=()=>newEstimate({id:"job-1",demandId:"dem-1",scopeVersion:2,idempotencyKey:"request-1"});
+const move=(j,to,args={})=>changeEstimate(j,to,{expectedVersion:j.version,authorized:true,...args});
+test("job começa em fila",()=>assert.equal(fresh().status,"queued"));
+test("exige chave de idempotência",()=>assert.throws(()=>newEstimate({id:"j",demandId:"d",scopeVersion:1}),/Missing/));
+test("impede salto direto para aprovado",()=>assert.throws(()=>move(fresh(),"approved"),/Invalid transition/));
+test("bloqueia operador não autorizado",()=>assert.throws(()=>changeEstimate(fresh(),"running",{expectedVersion:1}),/unauthorized/));
+test("bloqueia versão antiga",()=>assert.throws(()=>changeEstimate(fresh(),"running",{expectedVersion:9,authorized:true}),/Version conflict/));
+test("callback só aceita tarefa em execução",()=>assert.throws(()=>validateEstimateCallback(fresh(),{jobId:"job-1",scopeVersion:2,expectedVersion:1}),/Unexpected/));
+test("callback antigo não sobrescreve escopo",()=>{const j=move(fresh(),"running");assert.throws(()=>validateEstimateCallback(j,{jobId:"job-1",scopeVersion:1,expectedVersion:j.version}),/Stale/);});
+test("callback de outro job é rejeitado",()=>{const j=move(fresh(),"running");assert.throws(()=>validateEstimateCallback(j,{jobId:"other",scopeVersion:2,expectedVersion:j.version}),/Unknown/);});
+test("sem orçamento validado não vai para revisão",()=>{const j=move(fresh(),"running");assert.throws(()=>move(j,"awaiting_review"),/reference/);});
+test("orçamento segue fila, execução, revisão e aprovação",()=>{
+ const running=move(fresh(),"running");
+ assert.equal(validateEstimateCallback(running,{jobId:"job-1",scopeVersion:2,expectedVersion:running.version}),true);
+ const review=move(running,"awaiting_review",{estimateRef:"estimate-1"});
+ const approved=move(review,"approved");
+ assert.equal(approved.status,"approved");assert.equal(approved.version,4);
+ assert.throws(()=>move(approved,"running"),/Invalid transition/);
+});
