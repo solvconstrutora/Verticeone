@@ -1,0 +1,13 @@
+import { newEstimate, changeEstimate, validateEstimateCallback } from "../graphs/estimate-job.mjs";
+const log = (label, job) => console.log(JSON.stringify({ label, jobId: job.id, state: job.status, version: job.version }));
+let job = newEstimate({id:"demo-job-001", demandId:"demo-demand-001", scopeVersion:1, idempotencyKey:"demo-request-001"});
+log("solicitação recebida", job);
+job = changeEstimate(job,"running",{expectedVersion:job.version,authorized:true});
+log("orçamento em processamento", job);
+validateEstimateCallback(job,{jobId:job.id,scopeVersion:job.scopeVersion,expectedVersion:job.version});
+job = changeEstimate(job,"awaiting_review",{expectedVersion:job.version,authorized:true,estimateRef:"demo-estimate-001"});
+log("aguardando revisão humana", job);
+console.log("SIMULAÇÃO: autorização humana explícita para validar orçamento fictício");
+job = changeEstimate(job,"approved",{expectedVersion:job.version,authorized:true});
+log("orçamento aprovado (simulação)", job);
+console.log("SIMULAÇÃO CONCLUÍDA; nenhum webhook, cliente ou pagamento real acionado");
